@@ -1,50 +1,40 @@
-console.log('Homework 2-A...')
+console.log('Manipulating data, this time with nest')
 
 d3.csv('../data/hubway_trips_reduced.csv',parse,dataLoaded);
 
 function dataLoaded(err,rows){
 
-    var cf = crossfilter(rows),
-        tripsByTime = cf.dimension(function(d){return d.startTime}),
-        tripsByAge = cf.dimension(function(d){return d.userAge}),
-        tripsByDuration = cf.dimension(function(d){return d.duration}),
-        tripsByStartStation = cf.dimension(function(d){return d.startStation});
-
-    //Filtering
-
-    //How many trips in 2012 only?
-    tripsByTime.filter([new Date(2012,0,1),new Date(2012,11,31)]);
-    console.log(tripsByTime.top(Infinity).length);
-
-    //How many trips in 2012 are by those under 18?
-    tripsByAge.filter([.1,18]);
-    console.log(tripsByAge.top(Infinity));
-    console.log(tripsByTime.top(Infinity));
-
-    //How many trips in 2012 are by those over 60?
-    tripsByAge.filter(function(d){return d<20 || d>40});
-    console.log(tripsByAge.top(Infinity).length);
-    console.log(tripsByTime.top(Infinity).length);
-
-    //How many trips in 2012 started from Northeastern (station id 5)?
-    tripsByAge.filterAll();
-    tripsByStartStation.filter('5');
-    console.log(tripsByTime.top(Infinity).length);
-
-    //Clear all filters
-    tripsByStartStation.filterAll();
-    tripsByTime.filterAll();
+    //Step 1: start with the basics: nest, or group, trips with the same starting stations
+    //Using d3.nest()...entries()
 
 
-    //Group
-    //Combine trips into 10-year age groups; how many trips in each age group?
+    //Step 2: do the same as above, but instead of .entries(), use .map()
+    //How does this compare?
+
+    //Step 3: simple two level nest
+    //Nest trips with the same starting stations
+    //Under each station, further nest trips into two groups: those by registered vs. casual users
+    //Hint: casual users are those with no birth date, gender, or zip code information
+
+
+    //Step 4: simple two level nest
+    //Same as above, but instead of returning nested trips as sub-arrays, return two numbers:
+    //total count of registered trips, vs. casual trips
+
+
+    //Step 5: group trips with the same starting stations, BUT only for 2012
+    //Do this without crossfilter
+    //Hint: first you have to use array.filter() to reduce all trips to a smaller subset
+    //Then you nest the smaller array
+
+
+    //Step 6: do the same, but with crossfilter
+    //How does this compare to step 5?
 
 
 
 
 
-    tripsByAgeGroup = tripsByAge.group(function(d){return Math.floor(d/10)});
-    console.log(tripsByAgeGroup.all());
 
 }
 
