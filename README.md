@@ -1,47 +1,43 @@
-# Assignment 2A: Practice with crossfilter.js
+# Assignment 2-X [Optional]: Practicing with `d3.nest()`
 
-The purpose of this quick exercise is to get you to practice with the full range of capabilities of crossfilter.js. Please refer to the [API reference] (https://github.com/square/crossfilter/wiki/API-Reference) for detailed information on syntax.
+`d3.nest()` shares many conceptual similarities with crossfilter grouping options. Both can create sub-groups from a flat array based on some similarity criteria; both return a `{key:..., values:...}` structure. At the same time, there are many implementation differences. Some of these include:
 
-## Parsing data
+1. `d3.nest()` returns a reusable function, and this reusable function can be run on any array. `crossfilter.dimension.group` is a method of a *specific* crossfilter/dataset, and can only be used to group that dataset.
+2. `crossfilter.dimension.group` by default reduces groups to a single value; `d3.nest()` don't. However, `d3.nest()` can also be made to reduce, with the `d3.nest().rollup()` method.
 
-Crossfilter allows you to quickly filter, group, and reduce values of individual dimensions (tabular columns) of multi-dimensional datasets. One thing to note is that you can only filter data that can be compared i.e. with `>`,`<`,`>=`,`<=` and so on. Since `undefined` and `NaN` cannot be compared, you must not have these values in the input data to crossfilter.
+## Step 1: basic `d3.nest()`
 
-Parse and import the dataset so that we have "age" and "gender" as columns in our dataset, in addition to what's there already. Again, note that for trips taken by unregistered users, these fields are empty. You must make sure these empty fields are not imported as `undefined` or `NaN`. You may choose to use a placeholder value in these cases.
+Nest (i.e. group) all trips into subgroups that share the same starting station. Call `d3.nest().entries()`, and log the result.
 
-## Construct a crossfilter
+## Step 2: basic `d3.nest()`, but map the result
 
-Refer to [this](https://github.com/square/crossfilter/wiki/API-Reference#crossfilter).
-
-## Creating dimensions
-
-The most basic use case for crossfilter is to filter a large number of records into a smaller set based on criteria in certain columns. Before you can filter by a given column, you must first create a dimension. To filter by user age, for example, you first create a dimension like this:
+Do the same thing as step 1, but use `.map()` instead of `.entries()`. It should look something like this:
 ```
-var tripsByAge = allTrips.dimension(function(d){return d.userAge});
+var tripsByStartStation = d3.nest()
+  ...
+  .map(allTrips, d3.map)
 ```
-Later, to get a small subset of trips taken by those between 18 and 50, you can filter in this dimension
-```
-tripsByAge.filter([18,50]).top(100); //top 100 trips taken by those between 18 and 50 of age; the sort order is from highest (oldest) down
-```
+Log the result, and compare with step 1. What do you see?
 
-## Filtering
+## Step 3: Two level nest
 
-By creating the right dimensions, find and console log the following data points
-- total number of trips in 2012
-- total number of trips in 2012 AND taken by male, registered users
-- total number of trips in 2012, by all users (male, female, or unknown), starting from Northeastern (station id 5). Note that when you apply a new filter on column/dimension A, the existing filters are columns B, C, D... etc. are still active
-- top 50 trips, in all time, by all users, regardless of starting point, in terms of trip duration. Log the array of these trips in console.
+Nest all trips by start station, and under each subgroup by station, nest further by casual vs. registered users. Note that trips by casual users don't have any age, gender or zipcode information, so you can use this fact to add a casual/registered flag variable during parse.
 
-Afterwards, clear all filters.
+Note that crossfilter groups can't easily do this.
 
-## Group 
+## Step 4: Two level nest + reduce
 
-Another use of dimensions is that you can group rows with similar values on that dimension together. For example, if I want to group all trips taken in 2011, 2012, and 2013 into three buckets, I can do the following:
-```
-var tripsByTime = allTrips.dimension(function(d){return d.startTime}); //this is a dimension
+What if I want to find out this: what is the percentage of casual vs. registered trips at each station?
 
-var tripsByYearGroup = tripsByTime.group(function(d){return d.getFullYear()});
-```
-How does this work? In the accessor function `function(d){return d.getFullYear()}`, each value in the time dimension--a `Date` object, is transformed into a number, the year. Thus, any `Date` object in the same year will be transformed into the same number, and will thus be grouped together.
+We can start from step 3, and add one additional method to the nest function: `.rollup()`. As the name implies, this reduces (i.e. "rolls up") "leaves" in the nested structure into a single value. Consult the API doc.
 
-By creating a group on the right dimension, group all trips into 10-year age buckets i.e. trips by users between 20 and 29, 30 and 39 etc. Console log these groups using `group.all()`
+## Step 5: Nest, but only for 2012 
+
+Back to start: I want to nest trips by start station, but only for 2012. Without using crossfilter group, this is a two step process. First you need to `array.filter()` all trips, then you can nest the subset of trips.
+
+## Step 6: Group, but only for 2012
+
+Do the same thing as step 5, but by creating a crossfilter.
+
+What you want to do in step 5 is much more easily accomplished with crossfilter. Hint: you can have two dimensions on the crossfilter: "startStation" and "time". By applying an active filter on "time", any grouping you do on the "startStation" dimension also respects the "time" filter.
 
